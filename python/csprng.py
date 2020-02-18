@@ -105,11 +105,14 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
         del key
         key=bytes([a ^ b for a,b in zip(buffer1[0],buffer1[1])])
         
-        # use the rest of the chain as our bytes
+        # Clear some space on the queue if necessary
         if data_queue.full():
             d = data_queue.get()
             del d
         
+        # use the rest of the chain as our bytes
+        # we did 48 iterations, and are using 2 for a key, leaving
+        # 46 * 32bytes = 1472 bytes being pushed into the queue 
         data_queue.put(b"".join(buffer1[2:]))
         
         # Clear the old one out
