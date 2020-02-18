@@ -56,7 +56,7 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
     buffer1 = []
     
     # To help reduce the efficiency of backtracking, we'll mutate the key 1/2 way through
-    mutate_point = floor(int(itercount/2))
+    mutate_point = int(itercount/2)
     
     # 48 iterations
     for i in range(1,itercount):
