@@ -10,8 +10,11 @@ from threading import Thread
 from queue import Queue
 import time
 import os
+import sys
+
+# see note in seed fetcher section for why these are here
 import base64
-import requests # see note in seed fetcher section
+import requests 
 
 
 # This is based on the mitigations deployed in Amazon's S2N - https://aws.amazon.com/blogs/opensource/better-random-number-generation-for-openssl-libc-and-linux-mainline/
@@ -30,12 +33,6 @@ pipe_name="/tmp/csprng"
 
 # How often should we try to re-seed?
 reseed_interval=0.2
-
-
-# Hardcoding our seed in for now
-#
-# This is the output of my entropy collection/distribution script. It'll always return 512 bits
-randomdata=base64.b64decode("MjFfijwAV65CR12tom/BL2MfuMTmVJXD69pGV7gnVj0X9F/LxKpcwYGtD5/0CL3mnMjHKGmpOowbSb1KlXB5dw==")
 
 
 
@@ -187,21 +184,33 @@ def reader_thread(q,pipe):
 ### Seed Fetcher
 
 # Fetching over https is, of course, insane, but it means I can test this using my other scripts as input, will change this later
+def get_random_seed():
+    '''
+        Fetch random bytes to be used as a seed
+    '''
+    URL="https://entropysource.bentasker.co.uk/gimme"
+    r = requests.get(URL)
+    if r.status_code == 200:
+        return base64.b64decode(r.content)
+    
+    return False
+
+
+
 def seeder_thread(seed_queue,seed_interval):
     '''
         Fetch a seed value and push it onto the seed queue periodically
     '''
     pause = seed_interval / 2
     while True:       
-        URL="https://entropysource.bentasker.co.uk/gimme"
-        r = requests.get(URL)
-        if r.status_code == 200:
-            data = base64.b64decode(r.content)
-            
+
+        data = get_random_seed()
+        if data:
             if seed_queue.full():
                 d = seed_queue.get()
                 del d
             seed_queue.put(data)
+
         time.sleep(pause)
 
 
@@ -230,6 +239,12 @@ if prediction_resistant:
         from Crypto.Random import get_random_bytes
         bytefetch = get_random_bytes
     
+
+# Get our initial seed
+randomdata = get_random_seed()
+if not randomdata:
+    print("Error - failed to fetch intial seed")
+    sys.exit(1)
 
 
 # Create the RNG thread - for now we're passing in the hardcoded seed
