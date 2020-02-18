@@ -37,7 +37,7 @@ def iterate_with(key,plaintext,itercount):
         # Use counter-mode to generate our nonce for each encryption
         #
         # When this iteration loop is next called, the key will have changed
-        nonce=format(i,'012')
+        nonce=format(i,'012').encode('utf-8')
         
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
