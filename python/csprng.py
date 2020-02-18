@@ -35,6 +35,9 @@ pipe_name="/tmp/csprng"
 reseed_interval=0.2
 
 
+# This is created by another of my scripts. Could also be /dev/random
+seed_source="/tmp/randentropy"
+
 
 def ChaChaMe(key,nonce,plaintext):
     '''
@@ -183,28 +186,32 @@ def reader_thread(q,pipe):
 
 ### Seed Fetcher
 
-# Fetching over https is, of course, insane, but it means I can test this using my other scripts as input, will change this later
-def get_random_seed():
+
+def get_random_seed(seed_source):
     '''
         Fetch random bytes to be used as a seed
+        
+        This function will block if the source isn't able to provide sufficient bytes. 
+        That's sort of deliberate, but should probably handle it a bit more cleanly
     '''
-    URL="https://entropysource.bentasker.co.uk/gimme"
-    r = requests.get(URL)
-    if r.status_code == 200:
-        return base64.b64decode(r.content)
-    
-    return False
+    try:
+        f = os.open(seed_source,os.O_RDONLY)
+        bstring = os.read(f,64) # Read out 512 bits
+        os.close(f)
+        return bstring
+    except:
+        return False
 
 
 
-def seeder_thread(seed_queue,seed_interval):
+def seeder_thread(seed_queue,seed_interval,seed_source):
     '''
         Fetch a seed value and push it onto the seed queue periodically
     '''
     pause = seed_interval / 2
     while True:       
 
-        data = get_random_seed()
+        data = get_random_seed(seed_source)
         if data:
             if seed_queue.full():
                 d = seed_queue.get()
@@ -241,7 +248,7 @@ if prediction_resistant:
     
 
 # Get our initial seed
-randomdata = get_random_seed()
+randomdata = get_random_seed(seed_source)
 if not randomdata:
     print("Error - failed to fetch intial seed")
     sys.exit(1)
@@ -250,7 +257,7 @@ if not randomdata:
 # Create the RNG thread - for now we're passing in the hardcoded seed
 rngthread = Thread(target=rng_thread,args=(randomdata,seed_queue,data_queue,reseed_interval))
 readthread = Thread(target=reader_thread,args=(data_queue,pipe_name))
-seedthread = Thread(target=seeder_thread,args=(seed_queue,reseed_interval))
+seedthread = Thread(target=seeder_thread,args=(seed_queue,reseed_interval,seed_source))
 
 
 print("Starting")
