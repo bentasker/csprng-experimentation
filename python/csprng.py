@@ -12,10 +12,6 @@ import time
 import os
 import sys
 
-# see note in seed fetcher section for why these are here
-import base64
-import requests 
-
 
 # This is based on the mitigations deployed in Amazon's S2N - https://aws.amazon.com/blogs/opensource/better-random-number-generation-for-openssl-libc-and-linux-mainline/
 #
