@@ -95,13 +95,11 @@ def seeder_thread(initial_seed,seed_queue,data_queue):
         key=bytes([a ^ b for a,b in zip(buffer1[0],buffer1[1])])
         
         # use the rest of the chain as our bytes
-        for e in buffer1[2:]:
-            
-            if data_queue.full():
-                d = data_queue.get()
-                del d
-            
-            data_queue.put(e)        
+        if data_queue.full():
+            d = data_queue.get()
+            del d
+        
+        data_queue.put(b"".join(buffer1[2:]))
         
         # Clear the old one out
         del buffer1
