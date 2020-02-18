@@ -39,6 +39,10 @@ reseed_interval=0.2
 seed_source="/tmp/randentropy"
 
 
+# How many threads should we have generating random numbers?
+rng_threads=2
+
+
 def ChaChaMe(key,nonce,plaintext):
     '''
         Take a key and a "plaintext" (which in this case is probably a string of random bytes)
@@ -230,10 +234,10 @@ def seeder_thread(seed_queue,seed_interval,seed_source):
 ### Main
 
 # New seed data will get pushed to a queue
-seed_queue=Queue(2)
+seed_queue=Queue(rng_threads*2)
 
 # Generated random bytes will also find their way onto a queue
-data_queue=Queue(100)
+data_queue=Queue(rng_threads*100)
 
 # If prediction resistance is enabled, try and enable RDRAND. Fall back on `get_random_bytes` if not
 if prediction_resistant:
@@ -257,16 +261,25 @@ if not randomdata:
     sys.exit(1)
 
 
-# Create the RNG thread - for now we're passing in the hardcoded seed
-rngthread = Thread(target=rng_thread,args=(randomdata,seed_queue,data_queue,reseed_interval))
+
+# Create the reader thread and seeder threads
 readthread = Thread(target=reader_thread,args=(data_queue,pipe_name))
 seedthread = Thread(target=seeder_thread,args=(seed_queue,reseed_interval,seed_source))
 
+# Create the RNG threads
+threads=[]
+for i in range(0,rng_threads):
+    # Each should be started with a different seed
+    randomdata = get_random_seed(seed_source)
+    threads.append(Thread(target=rng_thread,args=(randomdata,seed_queue,data_queue,reseed_interval)))
+    threads[i].start()
+
+
 
 print("Starting")
-rngthread.start()
+#rngthread.start()
 readthread.start()
 seedthread.start()
-rngthread.join()
+#rngthread.join()
 readthread.join()
 seedthread.join()
