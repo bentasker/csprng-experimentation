@@ -48,12 +48,16 @@ def ChaChaMe(key,nonce,plaintext):
     return cipher.encrypt(plaintext)
 
 
-def iterate_with(key,plaintext,itercount,prediction_resistant):
+def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
     '''
         Iteratively reencrypt a keyset with itself - itercount iterations
     
     '''
     buffer1 = []
+    
+    # To help reduce the efficiency of backtracking, we'll mutate the key 1/2 way through
+    mutate_point = floor(int(itercount/2))
+    
     # 48 iterations
     for i in range(1,itercount):
         
@@ -68,8 +72,16 @@ def iterate_with(key,plaintext,itercount,prediction_resistant):
         if prediction_resistant:
             plaintext = mix_with_rand(plaintext)
         
+        if i == mutate_point and spare:
+            # Mutate the key using some of the "spare" data from the last key generation round
+            newkey = xor_bytes(key,spare)
+            del key
+            del spare
+            key = newkey
+            del newkey
         
         buffer1.append(plaintext)
+        
     return buffer1, plaintext
 
 
@@ -79,7 +91,7 @@ def mix_with_rand(plaintext):
     '''
     randbytes = bytefetch(32)
     
-    return bytes([a ^ b for a,b in zip(randbytes,plaintext)])
+    return xor_bytes(randbytes,plaintext)
 
 
 def split_seed(randbytes):
@@ -95,6 +107,11 @@ def split_seed(randbytes):
     return randbytes[0:32],randbytes
 
 
+def xor_bytes(b1,b2):
+    ''' Run a bitwise XOR on two sets of bytes
+    '''
+    return bytes([a ^ b for a,b in zip(b1,b2)])
+
 
 def select_key_from_bytes(inputbytes1,inputbytes2):
     '''
@@ -104,13 +121,13 @@ def select_key_from_bytes(inputbytes1,inputbytes2):
     b2,b2spare = split_seed(inputbytes2)
     
     # Combine them to create a new key
-    key=bytes([a ^ b for a,b in zip(b1,b2)])
+    key=xor_bytes(b1,b2)
     
     # Combine the "spare" bytes too
     #
     # these will get used later to mutate the key to help prevent backtracking
     # that's a TODO though.
-    spare=bytes([a ^ b for a,b in zip(b1spare,b2spare)])
+    spare=xor_bytes(b1spare,b2spare)
     
     return key,spare
 
@@ -123,10 +140,11 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
         
     key,plaintext=split_seed(initial_seed)
     start=time.time()
+    spare=False
     
     while True:
         # Set off the initial iteration (48 iterations)
-        buffer1, plaintext = iterate_with(key,plaintext,48,prediction_resistant)
+        buffer1, plaintext = iterate_with(key,plaintext,48,prediction_resistant,spare)
 
         # Clear the original and then use the first 2 entries to create the next key
         del key
