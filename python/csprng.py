@@ -78,7 +78,7 @@ def mix_with_rand(plaintext):
 
 
 
-def seeder_thread(initial_seed,seed_queue,data_queue):
+def rng_thread(initial_seed,seed_queue,data_queue):
     '''
         The RNG thread - this is where the numbers are actually generated
     '''
@@ -181,7 +181,7 @@ if prediction_resistant:
 
 
 # Create the RNG thread - for now we're passing in the hardcoded seed
-rngthread = Thread(target=seeder_thread,args=(randomdata,seed_queue,data_queue))
+rngthread = Thread(target=rng_thread,args=(randomdata,seed_queue,data_queue))
 readthread = Thread(target=reader_thread,args=(data_queue,pipe_name))
 
 
