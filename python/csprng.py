@@ -10,6 +10,16 @@ import os
 import base64
 
 
+# This is based on the mitigations deployed in Amazon's S2N - https://aws.amazon.com/blogs/opensource/better-random-number-generation-for-openssl-libc-and-linux-mainline/
+#
+# Mix a little randomness into each number (so that if we somehow end up with different threads running with the same seed we still get different results, preventing leakage between public and private contexts)
+#
+# Amazon use RDRAND - that's a tad tricky when you're tinkering with this on a Pi that doesn't have that instruction.
+#
+# Enabling this means that you'll no longer be generating deterministic output
+prediction_resistant=False
+
+
 # Hardcoding our seed in for now
 #
 # This is the output of my entropy collection/distribution script. It'll always return 512 bits
@@ -25,7 +35,7 @@ def ChaChaMe(key,nonce,plaintext):
     return cipher.encrypt(plaintext)
 
 
-def iterate_with(key,plaintext,itercount):
+def iterate_with(key,plaintext,itercount,prediction_resistant):
     '''
         Iteratively reencrypt a keyset with itself - itercount iterations
     
@@ -41,6 +51,11 @@ def iterate_with(key,plaintext,itercount):
         
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
+        
+        if prediction_resistant:
+            plaintext = mix_with_rand(plaintext)
+        
+        
         buffer1.append(plaintext)
     return buffer1, plaintext
 
@@ -61,10 +76,32 @@ def populate_global_buffer(buffer1):
     return key
 
 
-
+def mix_with_rand(plaintext):
+    '''
+        Take the input bytes and mix with data from a new random source
+    '''
+    randbytes = bytefetch(32)
+    
+    return bytes([a ^ b for a,b in zip(randbytes,plaintext)])
 
 
 # Main
+
+# If prediction resistance is enabled, try and enable RDRAND. Fall back on `get_random_bytes` if not
+if prediction_resistant:
+    fail=False
+    try:
+        import rdrand
+    except:
+        fail=True
+        
+    if not fail and rdrand.HAS_RAND:
+        bytefetch = rdrand.rdrand_get_bytes
+    else:
+        from Crypto.Random import get_random_bytes
+        bytefetch = get_random_bytes
+    
+
 buffer = [] # This is the output buffer. We'd prob make it a queue
 
 # Split our random data up to form a key and an input seed
@@ -75,16 +112,16 @@ plaintext=randomdata[32:] # this is another 32 bytes
 # Build up 100 iterations worth of blocks
 for i in range(0,100):
     # Set off the initial iteration (48 iterations)
-    buffer1, plaintext = iterate_with(key,plaintext,48)
+    buffer1, plaintext = iterate_with(key,plaintext,48,prediction_resistant)
 
     # Clear the original and then use the first 2 entries to create the next key
+    # use the rest of the chain as our bytes
     del key
-
-    # Extract bytes from the rest of the chain
     key = populate_global_buffer(buffer1)
 
     # Clear the old one out
     del buffer1
+
 
 # Write the bytes out to a file (makes it easier for me to run through ent etc for now)
 fh = os.open('op',os.O_RDWR)
@@ -95,3 +132,4 @@ os.close(fh)
 
 # Print it out just to prove to me that we did something
 print(buffer)
+
