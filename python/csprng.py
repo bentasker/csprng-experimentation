@@ -25,6 +25,9 @@ prediction_resistant=False
 # This is the output of my entropy collection/distribution script. It'll always return 512 bits
 randomdata=base64.b64decode("MjFfijwAV65CR12tom/BL2MfuMTmVJXD69pGV7gnVj0X9F/LxKpcwYGtD5/0CL3mnMjHKGmpOowbSb1KlXB5dw==")
 
+# part way through, we'll re-seed with this.
+randomdata2=base64.b64decode("iEK7H4LOZBA+YNx/4esUpPcbYctUWyBnifIhYQZT2uqcGs8nqcW0tTGJ6Y/rb+J0GFvN7wMArw0hIsidcPM3YA==")
+
 
 def ChaChaMe(key,nonce,plaintext):
     '''
@@ -121,6 +124,12 @@ for i in range(0,100):
 
     # Clear the old one out
     del buffer1
+
+    if i == 50:
+        # Re-seeding time
+        key=randomdata2[0:32]
+        plaintext=randomdata2[32:] # this is another 32 bytes
+
 
 
 # Write the bytes out to a file (makes it easier for me to run through ent etc for now)
