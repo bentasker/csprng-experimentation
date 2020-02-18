@@ -85,6 +85,12 @@ def mix_with_rand(plaintext):
 def split_seed(randbytes):
     '''
         Split our 512 bit bytestring into a key and a seed input
+        
+        
+        Could we stretch this out further by using all of randbytes as the seed? Feels like
+        it might be dangerous to multi-use the first 32 bytes, but I can't _quite_ rationalise why.
+        
+        I guess we'd need to trim the bytes in rng_thread when deriving a new key too
     '''
     return randbytes[0:32],randbytes[32:]
 
