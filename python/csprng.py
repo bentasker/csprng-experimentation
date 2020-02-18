@@ -11,8 +11,6 @@ import base64
 
 randomdata=base64.b64decode("MjFfijwAV65CR12tom/BL2MfuMTmVJXD69pGV7gnVj0X9F/LxKpcwYGtD5/0CL3mnMjHKGmpOowbSb1KlXB5dw==")
 
-plaintext="I _need_ a sleep".encode('utf-8')
-key="abcdefghijklmnopqrstuvwxyz012345".encode('utf-8') # key *must* be 32 bytes (it's a 256bit key)
 
 def ChaChaMe(key,plaintext):
     cipher=ChaCha20.new(key=key)
