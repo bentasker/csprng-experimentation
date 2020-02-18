@@ -129,12 +129,9 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
                     key,plaintext = split_seed(newseed)
                     #print("Re-Seeded")
                     start = time.time()
-                    
-            except Empty:
-                #print("Cam queue empty. Ignoring")
-                pass
             except:
-                print("{} Unexpected error retrieving seed frame from queue".format(time.time()))
+                    print("{} unable to read a seed".format(time.time()))
+                    pass
 
 
         
