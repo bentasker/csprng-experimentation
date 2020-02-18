@@ -13,6 +13,9 @@ import os
 import sys
 
 
+
+### Config section
+
 # This is based on the mitigations deployed in Amazon's S2N - https://aws.amazon.com/blogs/opensource/better-random-number-generation-for-openssl-libc-and-linux-mainline/
 #
 # Mix a little randomness into each number (so that if we somehow end up with different threads running with the same seed we still get different results, preventing leakage between public and private contexts)
@@ -38,6 +41,10 @@ seed_source="/tmp/randentropy"
 # How many threads should we have generating random numbers?
 rng_threads=2
 
+
+
+
+### RNG Related functions
 
 def ChaChaMe(key,nonce,plaintext):
     '''
@@ -90,7 +97,6 @@ def mix_with_rand(plaintext):
         Take the input bytes and mix with data from a new random source
     '''
     randbytes = bytefetch(32)
-    
     return xor_bytes(randbytes,plaintext)
 
 
@@ -132,7 +138,6 @@ def select_key_from_bytes(inputbytes1,inputbytes2):
     return key,spare
 
 
-
 def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
     '''
         The RNG thread - this is where the numbers are actually generated
@@ -157,7 +162,7 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
         
         # use the rest of the chain as our bytes
         # we did 48 iterations, and are using 2 for a key, leaving
-        # 46 * 32bytes = 1472 bytes being pushed into the queue 
+        # 46 * 64bytes being pushed into the queue 
         data_queue.put(b"".join(buffer1[2:]))
         
         # Clear the old one out
@@ -168,7 +173,6 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
                 newseed = seed_queue.get(True,0.1)
                 if newseed:
                     key,plaintext = split_seed(newseed)
-                    #print("Re-Seeded")
                     start = time.time()
             except:
                     print("{} unable to read a seed".format(time.time()))
@@ -176,11 +180,6 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
 
 
         
-
-
-
-
-
 
 ### Pipe/Output related functions
 
@@ -225,12 +224,12 @@ def reader_thread(q,pipe):
                 # The client probably went away, in which case os.close will have thrown "Bad File Descriptor"
                 pipeout=False
                 continue
-    
+
+
 
 
 
 ### Seed Fetcher
-
 
 def get_random_seed(seed_source):
     '''
@@ -248,7 +247,6 @@ def get_random_seed(seed_source):
         return False
 
 
-
 def seeder_thread(seed_queue,seed_interval,seed_source):
     '''
         Fetch a seed value and push it onto the seed queue periodically
@@ -264,7 +262,6 @@ def seeder_thread(seed_queue,seed_interval,seed_source):
             seed_queue.put(data)
 
         time.sleep(pause)
-
 
 
 
@@ -290,14 +287,13 @@ if prediction_resistant:
     else:
         from Crypto.Random import get_random_bytes
         bytefetch = get_random_bytes
-    
+
 
 # Get our initial seed
 randomdata = get_random_seed(seed_source)
 if not randomdata:
     print("Error - failed to fetch intial seed")
     sys.exit(1)
-
 
 
 # Create the reader thread and seeder threads
@@ -313,11 +309,8 @@ for i in range(0,rng_threads):
     threads[i].start()
 
 
-
 print("Starting")
-#rngthread.start()
 readthread.start()
 seedthread.start()
-#rngthread.join()
 readthread.join()
 seedthread.join()
