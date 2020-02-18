@@ -16,12 +16,12 @@ import base64
 randomdata=base64.b64decode("MjFfijwAV65CR12tom/BL2MfuMTmVJXD69pGV7gnVj0X9F/LxKpcwYGtD5/0CL3mnMjHKGmpOowbSb1KlXB5dw==")
 
 
-def ChaChaMe(key,plaintext):
+def ChaChaMe(key,nonce,plaintext):
     '''
         Take a key and a "plaintext" (which in this case is probably a string of random bytes)
         ChaCha20 them and return
     '''
-    cipher=ChaCha20.new(key=key)
+    cipher=ChaCha20.new(key=key,nonce=nonce)
     return cipher.encrypt(plaintext)
 
 
@@ -33,7 +33,14 @@ def iterate_with(key,plaintext,itercount):
     buffer1 = []
     # 48 iterations
     for i in range(1,itercount):
-        plaintext = ChaChaMe(key,plaintext)
+        
+        # Use counter-mode to generate our nonce for each encryption
+        #
+        # When this iteration loop is next called, the key will have changed
+        nonce=format(i,'012')
+        
+        # Trigger the encryption
+        plaintext = ChaChaMe(key,nonce,plaintext)
         buffer1.append(plaintext)
     return buffer1, plaintext
 
