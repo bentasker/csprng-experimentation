@@ -4,7 +4,7 @@ ChaCha20 Cryptographically Secure Random Number Generator Implementation
 
 Firstly, *DO NOT* use this for anything important.
 
-This was created just to allow me to play around with building a CSPRNG incorporating various techniques
+This was created just to allow me to play around with building a CSPRNG incorporating various techniques - the aim was to then look at re-building it in LUA and maybe some other languages, but I haven't got that far yet.
 
 * ChaCha20 based
 * Uses Fast Key Erasure
