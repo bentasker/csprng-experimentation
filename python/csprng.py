@@ -323,6 +323,7 @@ if prediction_resistant:
     else:
         from Crypto.Random import get_random_bytes
         bytefetch = get_random_bytes
+        print("WARN: Using Crypto.Random instead of RDRAND for prediction resistance - this is insecure")
 
 
 # Get our initial seed
