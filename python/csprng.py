@@ -362,7 +362,7 @@ import base64
 op=os.open("output",os.O_WRONLY)
 for i in range(0,128):
     os.write(op,bytes(base64.b64encode(data_queue.get())))
-    os.write(op,"\n")
+    os.write(op,b"\n")
 
 os.close(op)
 sys.exit()
