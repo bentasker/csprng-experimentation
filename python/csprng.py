@@ -71,7 +71,7 @@ seed_source="/tmp/randentropy"
 
 
 # How many threads should we have generating random numbers?
-rng_threads=2
+rng_threads=1
 
 
 
@@ -352,5 +352,16 @@ for i in range(0,rng_threads):
 print("Starting")
 readthread.start()
 seedthread.start()
-readthread.join()
-seedthread.join()
+#readthread.join()
+#seedthread.join()
+
+# Read out a sequence of bytes (block if necessary) so we can write them to a file for me to then try backtracking with
+
+import base64
+op=os.open("output",os.O_WRONLY)
+for i in range(0,128):
+    os.write(op,base64.b64encode(data_queue.get()))
+    os.write(op,"\n")
+
+os.close(op)
+sys.exit()
