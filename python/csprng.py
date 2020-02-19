@@ -113,7 +113,7 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         
         if i == mutate_point and spare:
             # Mutate the key using some of the "spare" data from the last key generation round
-            newkey = xor_bytes(key,spare)
+            newkey = xor_bytes(key,spare[32:])
             del key
             del spare
             key = newkey
