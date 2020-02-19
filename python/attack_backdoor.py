@@ -133,6 +133,7 @@ We pass our suspected key line off to split_key because the key has been written
 the line is 64 bytes
 
 '''
+
 k = split_key(xor_bytes(final[-1],final[-2]))
 print("Key is {} bytes".format(len(k)))
 
@@ -149,7 +150,7 @@ if not attempt1:
         
 if attempt1 or attempt2:
     print("Found key {}".format(base64.b64encode(k)))
-
+    print("data position is {}".format(datapos))
 
     # See whether we can now use that key to calculate an earlier value. We should drop the nonce by 1
     #
@@ -165,5 +166,66 @@ if attempt1 or attempt2:
     # This is where the data we'll compare to this time lives
     outpos = datapos+2
     if attempt3 == final[-outpos]:
-        print("Successfully predicted that position -{} would contain {} ({})".format(outpos,str(base64.b64encode(attempt3)),base64.b64encode(final[-outpos])))
-        
+        print("Successfully predicted that position -{} would contain {} ({}) nonce is {}".format(outpos,str(base64.b64encode(attempt3)),base64.b64encode(final[-outpos]),n))
+    else:
+        print("Hmmm that failed")
+        sys.exit(1)
+
+# TODO: can we get past the mutate threshold? It should have happened just after the nonce hits 12 (so the block with nonce 12 will use a different key)
+
+identified=[]
+
+# Start by pushing in the numbers we've already "recovered"
+identified.append(base64.b64encode(attempt3))
+
+
+while True:
+    n = int(n) - 1
+    if n == 0:
+        # We've reached the beginning
+        print("Reached beginning of block. Crossing that boundary is for another day")
+        break
+    
+    nonce = format(int(n),'012').encode('utf-8')
+
+    # Pull out our input bytes, this will be whatever we compared to successfully last time
+    datapos= datapos + 2
+    inp=final[-datapos]
+    
+    attempt = decrypt(inp,k,nonce)
+    
+    # Check we predicted it correctly
+    outpos = datapos+2
+    if attempt == final[-outpos]:
+        print("Woot")
+        identified.append(base64.b64encode(attempt))
+    else:
+        print("Failed with nonce {}".format(nonce))
+        # Most likely cause is a key rotation, so we'd need to pair the current block up with it's key output to try and derive the previous key
+        break
+    
+print(identified)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
