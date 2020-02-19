@@ -109,13 +109,14 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         if prediction_resistant:
             plaintext = mix_with_rand(plaintext)        
         
+        
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
         keystr = xor_bytes(key+key,plaintext)
         
         if i == mutate_point and spare:
             # Mutate the key using some of the "spare" data from the last key generation round
-            newkey = xor_bytes(key,spare)
+            newkey = xor_bytes(key,spare[32:])
             del key
             del spare
             key = newkey
@@ -188,7 +189,7 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
 
         # Clear the original and then use the first 2 entries to create the next key
         del key
-        key,spare=select_key_from_bytes(buffer1[0],buffer1[1])
+        key,spare=select_key_from_bytes(buffer1[0],buffer1[2])
         
         # Clear some space on the queue if necessary
         if data_queue.full():
@@ -198,7 +199,7 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
         # use the rest of the chain as our bytes
         # we did 48 iterations, and are using 2 for a key, leaving
         # 46 * 64bytes being pushed into the queue 
-        data_queue.put(b"".join(buffer1[2:-1]))
+        data_queue.put(b"".join(buffer1[2:-2]))
         
         
         # Next plaintext is the last block
@@ -360,7 +361,7 @@ seedthread.start()
 import base64
 op=os.open("output",os.O_WRONLY)
 for i in range(0,128):
-    os.write(op,base64.b64encode(data_queue.get()))
+    os.write(op,bytes(base64.b64encode(data_queue.get())))
     os.write(op,"\n")
 
 os.close(op)
