@@ -111,7 +111,7 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
-        keystr = xor_bytes(key,plaintext)
+        keystr = xor_bytes(key+key,plaintext)
         
         if i == mutate_point and spare:
             # Mutate the key using some of the "spare" data from the last key generation round
