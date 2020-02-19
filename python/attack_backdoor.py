@@ -72,12 +72,15 @@ def try_nonces(ciphertext,key,match_against):
     return found,False
 
 
-def split_key(inp):
+def split_key(inp,pos):
     ''' Keys are 32 bytes, but each "block" of output from the PRNG is 64 bytes
     
         So, the key was concated onto itself prior to the XOR 
     '''
-    return inp[0:32]
+    if pos == 0:
+        return inp[0:32]
+    else:
+        return inp[32:]
     
 
 
@@ -134,7 +137,8 @@ the line is 64 bytes
 
 '''
 
-k = split_key(xor_bytes(final[-1],final[-2]))
+keystring=xor_bytes(final[-1],final[-2])
+k = split_key(keystring,0)
 print("Key is {} bytes".format(len(k)))
 
 datapos=2 # We'll use this later to work out which line to look at next
@@ -143,7 +147,8 @@ attempt1,nonce = try_nonces(final[-2],k,final[-4])
 if not attempt1:
     # Maybe the final entry is the beginning of a new pair - i.e. bytes rather than key
     # shift slightly to try and find out
-    k = split_key(xor_bytes(final[-2],final[-3]))
+    keystring=xor_bytes(final[-2],final[-3])
+    k = split_key(keystring,0)
     datapos=3
     attempt2,nonce = try_nonces(final[-2],k,final[-5])
     
@@ -196,13 +201,26 @@ while True:
     
     # Check we predicted it correctly
     outpos = datapos+2
+    
+    if outpos > len(final):
+        print("Reached end of block")
+        break
+    
     if attempt == final[-outpos]:
         print("Woot")
         identified.append(base64.b64encode(attempt))
     else:
-        print("Failed with nonce {}".format(nonce))
-        # Most likely cause is a key rotation, so we'd need to pair the current block up with it's key output to try and derive the previous key
-        break
+        # Most likely cause is a key rotation, so we'd need to split the prevkey out of our keysting
+        k=split_key(keystring,1)
+        attempt = decrypt(inp,k,nonce)
+        if attempt == final[-outpos]:
+            print("Ah, was a key rotation")
+            print("Woot")
+            identified.append(base64.b64encode(attempt))
+        else:
+            print("Failed with nonce {}".format(nonce))
+            print("Dunno then")
+            break
     
 print(identified)
     

