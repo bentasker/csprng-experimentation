@@ -69,4 +69,4 @@ This, of course, is very much indicative only and may be [entirely misleading](h
 License
 --------
 
-This project is licensed under the [BSD 3 Clause License](http://opensource.org/licenses/BSD-3-Clause) and is Copyright (C) 2020 [Ben Tasker](http://www.bentasker.co.uk)
+This project is licensed under the [BSD 3 Clause License](https://opensource.org/licenses/BSD-3-Clause) and is Copyright (C) 2020 [Ben Tasker](https://www.bentasker.co.uk)
