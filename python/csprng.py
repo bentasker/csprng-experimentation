@@ -195,7 +195,11 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
         # use the rest of the chain as our bytes
         # we did 48 iterations, and are using 2 for a key, leaving
         # 46 * 64bytes being pushed into the queue 
-        data_queue.put(b"".join(buffer1[2:]))
+        data_queue.put(b"".join(buffer1[2:-1]))
+        
+        
+        # Next plaintext is the last block
+        plaintext=buffer1[-1]
         
         # Clear the old one out
         del buffer1
