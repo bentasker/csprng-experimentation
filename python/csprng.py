@@ -93,6 +93,7 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
     
     '''
     buffer1 = []
+    itercount = int(itercount/2)
     
     # To help reduce the efficiency of backtracking, we'll mutate the key 1/2 way through
     mutate_point = int(itercount/2)
@@ -110,6 +111,7 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
+        keystr = xor_bytes(key,plaintext)
         
         if i == mutate_point and spare:
             # Mutate the key using some of the "spare" data from the last key generation round
@@ -120,6 +122,7 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
             del newkey
         
         buffer1.append(plaintext)
+        buffer1.append(keystr)
         
     return buffer1, plaintext
 
