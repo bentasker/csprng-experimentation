@@ -205,7 +205,7 @@ def rng_thread(initial_seed,seed_queue,data_queue,reseed_interval):
         
         
         # Next plaintext is the last block
-        plaintext=buffer1[-1]
+        plaintext=xor_bytes(buffer1[-1],buffer1[-2])
         
         # Clear the old one out
         del buffer1

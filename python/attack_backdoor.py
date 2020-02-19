@@ -204,6 +204,7 @@ while True:
     
     if outpos > len(final):
         print("Reached end of block")
+        print("Key for previous block was {}".format(base64.b64encode(split_key(attempt,1))))
         break
     
     if attempt == final[-outpos]:
