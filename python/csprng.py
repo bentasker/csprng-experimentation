@@ -105,11 +105,11 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         # When this iteration loop is next called, the key will have changed
         nonce=format(i,'012').encode('utf-8')
         
+        if prediction_resistant:
+            plaintext = mix_with_rand(plaintext)        
+        
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
-        
-        if prediction_resistant:
-            plaintext = mix_with_rand(plaintext)
         
         if i == mutate_point and spare:
             # Mutate the key using some of the "spare" data from the last key generation round
