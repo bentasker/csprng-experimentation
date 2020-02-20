@@ -108,6 +108,13 @@ def iterate_with(key,plaintext,itercount,prediction_resistant,spare):
         if prediction_resistant:
             plaintext = mix_with_rand(plaintext)        
         
+        # If for some reason our key is < 32 bytes then skip
+        #
+        # This shouldn't but might happen as the result of a mutate,
+        # or because prediction_resistance has given us too few bytes back
+        if len(key) < 32:
+            continue
+        
         # Trigger the encryption
         plaintext = ChaChaMe(key,nonce,plaintext)
         
