@@ -65,7 +65,7 @@ The output of this CSPRNG scores quite well in `ent`, `rngtest` and `dieharder`
 
 This, of course, is very much indicative only and may be [entirely misleading](https://www.bentasker.co.uk/documentation/security/287-understanding-the-difficulty-of-assessing-entropy).
 
-In fact, this outout was gathered whilst the script contained a [serious bug](https://www.bentasker.co.uk/documentation/security/287-understanding-the-difficulty-of-assessing-entropy#theresabuginmybackdoor) which resulted in the generating get being 16 binary 0's 50% of the time.
+In fact, this outout was gathered whilst the script contained a [serious bug](https://www.bentasker.co.uk/blog/software-development/689-writing-a-chacha20-based-csprng#theresabuginmybackdoor) which resulted in the generating get being 16 binary 0's 50% of the time.
 
 
 
