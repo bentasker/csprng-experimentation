@@ -15,6 +15,7 @@ Although the techniques are present, their actual effectiveness is likely to be 
 
 Psuedo-Random bytes can be read from `/tmp/csprng` (configured by `pipe_name` at the top of the script).
 
+The branch `silly-backdoor` contains a modification to the PRNG which inserts a backdoor allowing an attacker to backtrack and calculate some of the bytes previously output - that branch also introduces a script `attack.py` to attack that backdoor.
 
 ----
 
@@ -61,7 +62,6 @@ The output of this CSPRNG scores quite well in `ent`, `rngtest` and `dieharder`
 
 
 This, of course, is very much indicative only and may be [entirely misleading](https://www.bentasker.co.uk/documentation/security/287-understanding-the-difficulty-of-assessing-entropy).
-
 
 
 
