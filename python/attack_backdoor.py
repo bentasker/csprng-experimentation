@@ -183,7 +183,7 @@ identified=[]
 # Start by pushing in the numbers we've already "recovered"
 
 # Add in the XOR block
-identified.append(base64.b64encode(xor_bytes(attempt3,k))
+identified.append(base64.b64encode(xor_bytes(attempt3,k)))
 identified.append(base64.b64encode(attempt3))
 
 
@@ -213,7 +213,7 @@ while True:
     if attempt == final[-outpos]:
         print("Woot")
         # Add in the XOR block
-        identified.append(base64.b64encode(xor_bytes(attempt,k))
+        identified.append(base64.b64encode(xor_bytes(attempt,k)))
         identified.append(base64.b64encode(attempt))
     else:
         # Most likely cause is a key rotation, so we'd need to split the prevkey out of our keysting
@@ -224,7 +224,7 @@ while True:
             print("Woot")
             
             # Add in the XOR block
-            identified.append(base64.b64encode(xor_bytes(attempt,k))            
+            identified.append(base64.b64encode(xor_bytes(attempt,k)))            
             identified.append(base64.b64encode(attempt))
         else:
             print("Failed with nonce {}".format(nonce))
