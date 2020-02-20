@@ -7,15 +7,17 @@ Firstly, *DO NOT* use this for anything important.
 This was created just to allow me to play around with building a CSPRNG incorporating various techniques - the aim was to then look at re-building it in LUA and maybe some other languages, but I haven't got that far yet.
 
 * ChaCha20 based
-* Uses Fast Key Erasure
-* Has a "prediction resistant" option
-* Implements back-tracking protection
+* Uses [Fast Key Erasure](https://www.bentasker.co.uk/blog/software-development/689-writing-a-chacha20-based-csprng#fastkeyerasure)
+* Has a ["prediction resistant" option](https://www.bentasker.co.uk/blog/software-development/689-writing-a-chacha20-based-csprng#predictionresistance)
+* Implements [back-tracking protection](https://www.bentasker.co.uk/blog/software-development/689-writing-a-chacha20-based-csprng#backtracking)
 
 Although the techniques are present, their actual effectiveness is likely to be substantially less than you'd hope for, as discussed in [this write up](https://www.bentasker.co.uk/blog/software-development/689-writing-a-chacha20-based-csprng)
 
 Psuedo-Random bytes can be read from `/tmp/csprng` (configured by `pipe_name` at the top of the script).
 
-The branch `silly-backdoor` contains a modification to the PRNG which inserts a backdoor allowing an attacker to backtrack and calculate some of the bytes previously output - that branch also introduces a script `attack.py` to attack that backdoor.
+The branch [`silly-backdoor`](https://github.com/bentasker/csprng-experimentation/tree/silly-backdoor) contains a modification to the PRNG which inserts a backdoor allowing an attacker to backtrack and calculate some of the bytes previously output - that branch also introduces a script `attack.py` to attack that backdoor. Writeup on that is [here](https://www.bentasker.co.uk/blog/software-development/689-writing-a-chacha20-based-csprng#backdoor).
+
+
 
 ----
 
@@ -63,6 +65,7 @@ The output of this CSPRNG scores quite well in `ent`, `rngtest` and `dieharder`
 
 This, of course, is very much indicative only and may be [entirely misleading](https://www.bentasker.co.uk/documentation/security/287-understanding-the-difficulty-of-assessing-entropy).
 
+In fact, this outout was gathered whilst the script contained a [serious bug](https://www.bentasker.co.uk/documentation/security/287-understanding-the-difficulty-of-assessing-entropy#theresabuginmybackdoor) which resulted in the generating get being 16 binary 0's 50% of the time.
 
 
 
