@@ -206,7 +206,7 @@ while True:
     outpos = datapos+2
     
     if outpos > len(final):
-        print("Reached end of block")
+        print("Reached beginning of block")
         print("Key for previous block was {}".format(base64.b64encode(split_key(attempt,1))))
         break
     
